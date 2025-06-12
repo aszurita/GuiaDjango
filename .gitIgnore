@@ -47,3 +47,7 @@ coverage.xml
 
 # Logs
 *.log
+
+.env
+/db.sqlite3
+git
