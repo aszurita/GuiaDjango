@@ -1,9 +1,7 @@
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth import logout
-from django.shortcuts import redirect
 from social_django.models import UserSocialAuth
-
+from django.contrib.auth.decorators import login_required, permission_required
+from django.shortcuts import redirect, render
 
 def index(request):
     user = request.user
@@ -38,10 +36,8 @@ def logout_view(request):
 
 
 @login_required
+@permission_required("main.acceso_admin_panel", raise_exception=True)
 def admin_panel(request):
-    if not request.user.groups.filter(name="Administrador").exists():
-        return redirect("profile")
     return render(request, "main/admin_panel.html")
-
 
 # Ciertos usuarios me dijirian a una pagina y a otra pagina
