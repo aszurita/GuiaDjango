@@ -1,0 +1,18 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Acceso denegado</title>
+    <!-- Local stylesheets -->
+    <link rel="stylesheet" href="{% static 'css/tailwind.output.css' %}">
+  </head>
+  <body class="w-full">
+    <main
+      class="flex flex-col items-center justify-center h-screen w-full text-center space-y-2">
+      <h1 class="text-center font-bold text-6xl">403 - Acceso Denegado</h1>
+      <p class="text-2xl">No tienes permiso para acceder a esta sección.</p>
+      <img src="{% static 'img/403.png' %}" alt="Acceso denegado" width="300">
+      <a href="/" class="text-2xl">Volver al inicio</a>
+    </main>
+  </body>
+</html>

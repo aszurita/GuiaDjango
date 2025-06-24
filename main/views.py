@@ -40,4 +40,6 @@ def logout_view(request):
 def admin_panel(request):
     return render(request, "main/admin_panel.html")
 
-# Ciertos usuarios me dijirian a una pagina y a otra pagina
+
+def error_403_view(request, exception=None):
+    return render(request, "main/403.html", status=403)
