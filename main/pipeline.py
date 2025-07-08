@@ -6,7 +6,7 @@ User = get_user_model()
 
 def connect_by_email(backend, uid, user=None, *args, **kwargs):
     if user:
-        return None  # Ya autenticado
+        return None 
 
     email = kwargs.get("details", {}).get("email")
     first_name = kwargs.get("details", {}).get("first_name", "")
@@ -14,13 +14,14 @@ def connect_by_email(backend, uid, user=None, *args, **kwargs):
     username = kwargs.get("username") or email.split("@")[0]
 
     if not email:
-        return None  # No se puede continuar sin correo
+        return None 
 
     try:
         user = User.objects.get(email=email)
         return {"user": user}
 
     except User.DoesNotExist:
+        print("Usuario no existe, creando usuario")
         user = User.objects.create_user(
             username=username,
             email=email,

@@ -116,7 +116,11 @@ INSTALLED_APPS = [
     'social_django',  # Add social-auth-app-django
 ]
 
-
+MIDDLEWARE = [
+       ...
+       'social_django.middleware.SocialAuthExceptionMiddleware',
+       ...
+]
 
 ......
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -154,14 +158,6 @@ instalar
 pip install social-auth-app-django dotenv
 ```
 
-OPCIONALES
-```
-MIDDLEWARE = [
-       ...
-       'social_django.middleware.SocialAuthExceptionMiddleware',
-       ...
-]
-```
 El middleware _social_django.middleware.SocialAuthExceptionMiddleware_ se utiliza para manejar las excepciones que pueden ocurrir durante el proceso de autenticación social.
 
 - _Manejo de errores en autenticación social:_ Cuando un usuario intenta iniciar sesión a través de un proveedor social (como Google en tu caso), pueden surgir diversos problemas (por ejemplo, el usuario cancela el proceso, hay un error de red, o el proveedor de OAuth devuelve un error). Este middleware captura estas excepciones que son específicas de la librería social-auth-core.
@@ -194,82 +190,6 @@ Los "context processors" en Django son funciones que, antes de que una plantilla
     - **Propósito:** Este procesador de contexto se encarga de manejar la lógica de redirección después de un inicio de sesión exitoso.
     - **Uso común:** Cuando un usuario intenta acceder a una página que requiere autenticación, Django lo redirige a la página de inicio de sesión, añadiendo un parámetro `next` a la URL (ej: `/login/?next=/profile/`). Este procesador de contexto se asegura de que este parámetro `next` (que contiene la URL a la que el usuario quería ir originalmente) esté disponible en el contexto de la plantilla de login. Esto permite que, una vez que el usuario inicie sesión exitosamente a través de Google OAuth, `social-auth-app-django` sepa a qué URL debe redirigir al usuario, llevándolo de vuelta a la página que originalmente intentaba visitar.
 
-### `social-auth-app-django`
-python-social-auth (o social-auth-app-django) trae una pipeline por defecto que es exactamente esa lista si no la defines tú. 
-```
-# Esto ya lo hace el (
-    'social_core.pipeline.social_auth.social_details',       # obtiene los detalles del usuario desde el proveedor
-    'social_core.pipeline.social_auth.social_uid',           # obtiene el UID del proveedor
-    'social_core.pipeline.social_auth.auth_allowed',         # verifica si el login está permitido
-    'social_core.pipeline.social_auth.social_user',          # busca un usuario existente con esa cuenta social
-    'social_core.pipeline.user.get_username',                # sugiere un nombre de usuario
-    'social_core.pipeline.user.create_user',                 # crea el usuario si no existe
-    'social_core.pipeline.social_auth.associate_user',       # asocia la cuenta social al usuario
-    'social_core.pipeline.social_auth.load_extra_data',      # guarda datos extra del proveedor
-    'social_core.pipeline.user.user_details',                # actualiza detalles del perfil de usuario
-)
-```
-
-### `social-auth-SocialAuthExceptionMiddleware-django`
-```python
-MIDDLEWARE = [
-       ...
-       'social_django.middleware.SocialAuthExceptionMiddleware',
-       ...
-]
-```
-```python
-'social_django.middleware.SocialAuthExceptionMiddleware'
-```
-
-**¿Para qué sirve?**
-
-Captura excepciones relacionadas con el login social (por ejemplo, si un usuario cancela el acceso desde Google) y **evita que la app explote con un error 500**, redirigiendo o mostrando un mensaje más amigable.
-
-**¿Por qué tu app funciona sin él?**
-
-Porque mientras **no ocurra una excepción**, todo va bien. Pero si en algún momento se produce un error durante la autenticación (por ejemplo, UID duplicado, acceso denegado por el usuario, etc.), sin este middleware:
-
-* Verás un error **500**.
-* No podrás manejarlo con gracia (como redirigir a `/login-error/` o mostrar un mensaje).
-
-**Opcional, pero recomendado** si quieres una mejor experiencia de usuario.
-
----
-
-### Context Processors
-
-
-**¿Para qué sirve?**
-Los "context processors" en Django son funciones que, antes de que una plantilla sea renderizada, añaden variables al contexto de la plantilla. Esto significa que esas variables estarán disponibles para que las uses en tus archivos HTML (plantillas).
-
-1.  **`'social_django.context_processors.backends'`**:
-
-    - **Propósito:** Este procesador de contexto hace que una lista de todos los backends de autenticación social que tienes configurados en tu `settings.py` (como GoogleOAuth2, Facebook, etc.) esté disponible en el contexto de tus plantillas.
-    - **Uso común:** Es extremadamente útil cuando quieres mostrar dinámicamente botones de "Iniciar sesión con [Proveedor]" en tu página de login. En lugar de codificar cada botón manualmente, puedes iterar sobre esta lista en tu plantilla para generar los enlaces a los diferentes proveedores de OAuth que has habilitado.
-
-2.  **`'social_django.context_processors.login_redirect'`**:
-    - **Propósito:** Este procesador de contexto se encarga de manejar la lógica de redirección después de un inicio de sesión exitoso.
-    - **Uso común:** Cuando un usuario intenta acceder a una página que requiere autenticación, Django lo redirige a la página de inicio de sesión, añadiendo un parámetro `next` a la URL (ej: `/login/?next=/profile/`). Este procesador de contexto se asegura de que este parámetro `next` (que contiene la URL a la que el usuario quería ir originalmente) esté disponible en el contexto de la plantilla de login. Esto permite que, una vez que el usuario inicie sesión exitosamente a través de Google OAuth, `social-auth-app-django` sepa a qué URL debe redirigir al usuario, llevándolo de vuelta a la página que originalmente intentaba visitar.
-
-**¿Por qué te funciona sin él?**
-
-Porque si **no usas esas variables en tus templates**, no pasa nada. Pero si algún día lo haces y no tienes este *context processor*, fallará con un error tipo `VariableDoesNotExist`.
-
-**Opcional, salvo que quieras mostrar opciones de login social en tus templates.**
-
----
-
-### Conclusión general
-
-| Elemento                        | ¿Opcional? | ¿Recomendado?                 | ¿Cuándo sí?                           |
-| ------------------------------- | ---------- | ----------------------------- | ------------------------------------- |
-| `SOCIAL_AUTH_PIPELINE`          | Sí         | Solo si personalizas el flujo | Cuando necesitas control extra        |
-| `SocialAuthExceptionMiddleware` | Sí         | Sí                            | Para manejar errores del login social |
-| `context_processors.backends`   | Sí         | Sí                            | Si usas `{{ backends }}` en templates |
-
-
-## Mejoras
 Modificar el header, para que aparezca los botones según corresponda
 
 ```
@@ -366,6 +286,7 @@ Modificar el header, para que aparezca los botones según corresponda
             </li>
 ```
 
+Podemos mejorarlo
 Agregar
 
 ```
@@ -510,8 +431,341 @@ urlpatterns = [
     path('oauth/', include('social_django.urls', namespace='social')),
 ]
 ```
+
+## Autorización
+
+Buscamos que apartir de la base de datos donde existen los usuarios tales como administradores y otros roles darle permiso
+
+para el cual como vas a cambiar el pipeline normal de autenticación de django para asignarle ciertas permisos y poder ver si el usuario ya pertenece a uno
+
+templates/main/pipeline.py
+
+```python
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+
+User = get_user_model()
+
+
+def connect_by_email(backend, uid, user=None, *args, **kwargs):
+    if user:
+        return None
+
+    email = kwargs.get("details", {}).get("email")
+    first_name = kwargs.get("details", {}).get("first_name", "")
+    last_name = kwargs.get("details", {}).get("last_name", "")
+    username = kwargs.get("username") or email.split("@")[0]
+
+    if not email:
+        return None
+
+    try:
+        user = User.objects.get(email=email)
+        return {"user": user}
+
+    except User.DoesNotExist:
+        print("Usuario no existe, creando usuario")
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            is_active=True,
+        )
+
+        group, _ = Group.objects.get_or_create(name="Google Users")
+        user.groups.add(group)
+        user.save()
+
+        return {"user": user}
 ```
-python cargar_usuarios.py
-python manage.py makemigrations
-python manage.py migrate
+
+luego añadir ese metodo al pipeline
+
+en settings.py
+
+```python
+
+....
+## Agregar para autorizacion
+
+SOCIAL_AUTH_PIPELINE = (
+"social_core.pipeline.social_auth.social_details",
+"social_core.pipeline.social_auth.social_uid",
+"social_core.pipeline.social_auth.auth_allowed",
+"social_core.pipeline.social_auth.social_user",
+"main.pipeline.connect_by_email", ## Agregar
+"social_core.pipeline.user.get_username",
+"social_core.pipeline.user.create_user",
+"social_core.pipeline.social_auth.associate_user",
+"social_core.pipeline.social_auth.load_extra_data",
+"social_core.pipeline.user.user_details",
+)
+
+```
+
+### Explicación paso a paso
+
+```python
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+
+User = get_user_model()
+```
+
+- **Importa el modelo de usuario** (puede ser el modelo por defecto de Django o uno personalizado).
+- **Importa el modelo de grupo** para asignar roles o permisos.
+
+---
+
+#### Función principal: `connect_by_email`
+
+```python
+def connect_by_email(backend, uid, user=None, *args, **kwargs):
+    if user:
+        return None
+```
+
+- Si ya hay un usuario autenticado, no hace nada y termina.
+
+---
+
+```python
+    email = kwargs.get("details", {}).get("email")
+    first_name = kwargs.get("details", {}).get("first_name", "")
+    last_name = kwargs.get("details", {}).get("last_name", "")
+    username = kwargs.get("username") or email.split("@")[0]
+```
+
+- **Extrae información** del usuario que viene del proveedor social (Google, etc.): email, nombre, apellido y username.
+
+---
+
+```python
+    if not email:
+        return None
+```
+
+- Si no hay email, no puede continuar (el email es obligatorio para identificar al usuario).
+
+---
+
+```python
+    try:
+        user = User.objects.get(email=email)
+        return {"user": user}
+```
+
+- **Busca si ya existe un usuario con ese email** en la base de datos.
+- Si existe, lo retorna para que el pipeline lo use y lo conecte.
+
+---
+
+```python
+    except User.DoesNotExist:
+        print("Usuario no existe, creando usuario")
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            is_active=True,
+        )
+```
+
+- Si el usuario **no existe**, lo crea con los datos recibidos.
+
+---
+
+```python
+        group, _ = Group.objects.get_or_create(name="Google Users")
+        user.groups.add(group)
+        user.save()
+```
+
+- **Asigna el usuario a un grupo** llamado "Google Users". Si el grupo no existe, lo crea.
+- Esto es útil para dar permisos o roles especiales a los usuarios que se registran por Google.
+
+---
+
+```python
+        return {"user": user}
+```
+
+- Devuelve el usuario recién creado para que el pipeline de autenticación lo use.
+
+---
+
+## Creación de modelos
+
+Reemplazaar contenido por (models.py)
+
+```python
+from django.db import models
+# Create your models here.
+
+class Permisos(models.Model):  # puede ser cualquier modelo real o ficticio
+    class Meta:
+        permissions = [
+            ("acceso_admin_panel", "Puede acceder al panel de administración"),
+            ("acceso_solo_Usuarios", "Puede acceder a informacion de solo Usurios"),
+        ]
+```
+
+## Vistas por permisos
+
+```python
+# añadir permission_required
+from django.contrib.auth.decorators import login_required, permission_required
+.....
+
+.....
+@login_required
+@permission_required("main.acceso_admin_panel", raise_exception=True)
+def admin_panel(request):
+    return render(request, "main/admin_panel.html")
+
+
+def error_403_view(request, exception=None):
+    return render(request, "main/403.html", status=403)
+```
+
+Para esto crear el archivo admin_panel.html
+
+```html
+<!-- Extend "main/base.html" -->
+{% extends "main/base.html" %}
+
+<!-- START - Block title -->
+{% block title %} Backend - Inicio {% endblock %}
+<!-- END - Block title -->
+
+<!-- START - Block content -->
+{% block content %}
+<div class="flex flex-col flex-1 w-full">
+  <div class="text-6xl font-bold text-white text-center">
+    <strong>ADMINISTRADOR</strong>
+  </div>
+  <div class="flex flex-col flex-1 w-full">
+    {% include './partials/header.html' %} {% include './content/data.html' %}
+  </div>
+</div>
+
+{% endblock %}
+<!-- END - Block content -->
+```
+
+y 403.html
+
+```html
+{% load static %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Acceso denegado</title>
+    <!-- Local stylesheets -->
+    <link rel="stylesheet" href="{% static 'css/tailwind.output.css' %}" />
+  </head>
+  <body class="w-full">
+    <main
+      class="flex flex-col items-center justify-center h-screen w-full text-center space-y-2"
+    >
+      <h1 class="text-center font-bold text-6xl">403 - Acceso Denegado</h1>
+      <p class="text-2xl">No tienes permiso para acceder a esta sección.</p>
+      <img src="{% static 'img/403.png' %}" alt="Acceso denegado" width="300" />
+      <a href="/" class="text-2xl">Volver al inicio</a>
+    </main>
+  </body>
+</html>
+```
+
+Para que funcione se debe agregar en backend/urls.py
+
+```python
+from django.contrib import admin
+from django.urls import path,include
+# Añadir estas importaciones
+from django.conf import settings
+from django.conf.urls.static import static
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('main.urls')),
+]
+
+handler403 = "main.views.error_403_view"
+
+if settings.DEBUG:
+    urlpatterns += static(
+        settings.STATIC_URL, document_root=settings.STATICFILES_DIRS[0]
+    )
+```
+
+y en main/urls.py debe verse así
+
+```python
+from django.urls import path, include
+from . import views
+
+urlpatterns = [
+    path("", views.index, name="index"),
+    path("login/", views.login, name="login"),
+    path("profile/", views.profile, name="profile"),
+    path("logout/", views.logout_view, name="logout"),
+    path("oauth/", include("social_django.urls", namespace="social")),
+    path("admin_panel/", views.admin_panel, name="admin_panel"), # añadir
+]
+```
+
+### Crear permisos
+
+Crear signals.py
+
+```python
+from django.db.models.signals import post_migrate
+from django.contrib.auth.models import Permission, Group
+from django.contrib.contenttypes.models import ContentType
+from django.dispatch import receiver
+from django.apps import apps
+
+
+@receiver(post_migrate)
+def crear_permiso_admin(sender, **kwargs):
+    PermisosModel = apps.get_model("main", "Permisos")  # o el modelo real que usaste
+    content_type = ContentType.objects.get_for_model(PermisosModel)
+
+    perm, created = Permission.objects.get_or_create(
+        codename="acceso_admin_panel",
+        name="Puede acceder al panel de administración",
+        content_type=content_type,
+    )
+    grupo, _ = Group.objects.get_or_create(name="Administrador")
+    grupo.permissions.add(perm)
+```
+
+### Simular permisos en profile.html
+
+Actualizar el html
+
+```html
+<!-- Botones de Acción -->
+<div class="flex justify-center space-x-4">
+  <a
+    href="{% url 'admin_panel' %}"
+    class="px-6 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+  >
+    Panel de Administrador
+  </a>
+  <a
+    href="{% url 'index' %}"
+    class="px-6 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200"
+  >
+    Volver al Dashboard
+  </a>
+  <a
+    href="{% url 'logout' %}"
+    class="px-6 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200"
+  >
+    Cerrar Sesión
+  </a>
+</div>
 ```
