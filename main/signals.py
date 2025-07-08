@@ -7,8 +7,8 @@ from django.apps import apps
 
 @receiver(post_migrate)
 def crear_permiso_admin(sender, **kwargs):
-    DummyModel = apps.get_model("main", "DummyModel")  # o el modelo real que usaste
-    content_type = ContentType.objects.get_for_model(DummyModel)
+    PermisosModel = apps.get_model("main", "Permisos")  # o el modelo real que usaste
+    content_type = ContentType.objects.get_for_model(PermisosModel)
 
     perm, created = Permission.objects.get_or_create(
         codename="acceso_admin_panel",

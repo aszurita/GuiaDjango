@@ -510,4 +510,8 @@ urlpatterns = [
     path('oauth/', include('social_django.urls', namespace='social')),
 ]
 ```
-
+```
+python cargar_usuarios.py
+python manage.py makemigrations
+python manage.py migrate
+```

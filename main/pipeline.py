@@ -1,11 +1,36 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.contrib.auth.models import Permission, Group
+
+User = get_user_model()
 
 
-def add_user_to_group(backend, user, response, *args, **kwargs):
-    if backend.name == "google-oauth2":
+def connect_by_email(backend, uid, user=None, *args, **kwargs):
+    if user:
+        return None  # Ya autenticado
+
+    email = kwargs.get("details", {}).get("email")
+    first_name = kwargs.get("details", {}).get("first_name", "")
+    last_name = kwargs.get("details", {}).get("last_name", "")
+    username = kwargs.get("username") or email.split("@")[0]
+
+    if not email:
+        return None  # No se puede continuar sin correo
+
+    try:
+        user = User.objects.get(email=email)
+        return {"user": user}
+
+    except User.DoesNotExist:
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            is_active=True,
+        )
+
         group, _ = Group.objects.get_or_create(name="Google Users")
         user.groups.add(group)
-        if user.email in ["angelozurita7@gmail.com", "nzuritag@fiec.espol.edu.ec"]:
-            admin_group, _ = Group.objects.get_or_create(name="Administrador")
-            user.groups.add(admin_group)
+        user.save()
+
+        return {"user": user}
