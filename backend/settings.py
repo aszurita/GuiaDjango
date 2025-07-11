@@ -25,12 +25,20 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-#y=m_s1tz^*6x+$iit&*m245h(x4)n%+%uwhydcel2wgm7$=@%"
 
+# Cambiar para hacer deploy
+#SECRET_KEY = "django-insecure-#y=m_s1tz^*6x+$iit&*m245h(x4)n%+%uwhydcel2wgm7$=@%"
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True  # cambiar
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+#DEBUG = True  # cambiar
+
+SECRET_KEY = os.getenv("SECRET_KEY", "clave-insegura")
+DEBUG = os.getenv("DEBUG", "False") == "True"
+
+# Cambiar para hacer deploy
+#ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 # ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
+
 
 
 # Application definition
@@ -48,6 +56,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware", # # Cambiar para hacer deploy
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -137,9 +146,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
+# # Cambiar para hacer deploy
+#STATIC_URL = "/static/"
+#STATICFILES_DIRS = [BASE_DIR / "static"]
+
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
-
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -174,3 +187,7 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.load_extra_data",
     "social_core.pipeline.user.user_details",
 )
+
+# Cambiar para hacer deploy
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
