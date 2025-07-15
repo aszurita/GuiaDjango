@@ -23,7 +23,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("main.urls")),
-    path("auth/", include("social_django.urls", namespace="social")),
+    # CORREGIDO: Cambiar de "auth/" a "oauth/" para que coincida con la configuración
+    path("oauth/", include("social_django.urls", namespace="social")),
 ]
 
 handler403 = "main.views.error_403_view"

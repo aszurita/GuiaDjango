@@ -21,12 +21,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("SECRET_KEY", "clave-insegura")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-# CORRECIÓN 1: Remover https:// y agregar dominio sin protocolo
 ALLOWED_HOSTS = [
-    "fair-rania-espol-dawn-bf49c5ba.koyeb.app",  # Sin https://
+    "fair-rania-espol-dawn-bf49c5ba.koyeb.app",
     "localhost",
     "127.0.0.1",
-    "12"
 ]
 
 INSTALLED_APPS = [
@@ -76,12 +74,11 @@ AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
 )
 
+# Configuración de Google OAuth2
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get('GOOGLE_OAUTH2_KEY')
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get('GOOGLE_OAUTH2_SECRET')
 
-# CORRECIÓN 2: Configurar URLs de redirección para OAuth
-SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = 'https://fair-rania-espol-dawn-bf49c5ba.koyeb.app/auth/complete/google-oauth2/'
-
+# URLs de redirección
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "profile"
 LOGOUT_URL = "index"
@@ -127,23 +124,52 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.user.user_details",
 )
 
-# CORRECIÓN 3: Solo mostrar debug en desarrollo
-if DEBUG:
-    print("GOOGLE_OAUTH2_KEY:", os.environ.get('GOOGLE_OAUTH2_KEY', 'NO CONFIGURADO'))
-    print("GOOGLE_OAUTH2_SECRET:", os.environ.get('GOOGLE_OAUTH2_SECRET', 'NO CONFIGURADO'))
-
-# CORRECIÓN 4: Configuración de seguridad mejorada para producción
+# Configuración de seguridad mejorada para producción
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     
-    # CORRECIÓN 5: Configurar CSRF y hosts de confianza
+    # Configurar CSRF y hosts de confianza
     CSRF_TRUSTED_ORIGINS = [
-        'https://fair-rania-espol-dawn-bf49c5ba.koyeb.app'
+        'https://fair-rania-espol-dawn-bf49c5ba.koyeb.app',
+        'https://accounts.google.com',
     ]
     
-    # CORRECIÓN 6: Configurar dominio de sesión
+    # Configurar dominio de sesión
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_COOKIE_SAMESITE = 'Lax'
+    
+    # Configuración específica para OAuth2
+    SOCIAL_AUTH_REDIRECT_IS_HTTPS = True
+
+# Configuración de logging para debug
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'social_core': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+        },
+        'social_django': {
+            'handlers': ['console'],
+            'level': 'DEBUG' if DEBUG else 'INFO',
+        },
+    },
+}
+
+# Debug solo en desarrollo
+if DEBUG:
+    print("=== CONFIGURACIÓN DE DEBUG ===")
+    print(f"GOOGLE_OAUTH2_KEY: {SOCIAL_AUTH_GOOGLE_OAUTH2_KEY or 'NO CONFIGURADO'}")
+    print(f"GOOGLE_OAUTH2_SECRET: {'***' if SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET else 'NO CONFIGURADO'}")
+    print(f"CSRF_TRUSTED_ORIGINS: {globals().get('CSRF_TRUSTED_ORIGINS', 'NO CONFIGURADO')}")
