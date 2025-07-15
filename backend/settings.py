@@ -20,7 +20,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "clave-insegura")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = ["conscious-owl-espol-dawn-12bfa645.koyeb.app"]
+ALLOWED_HOSTS = ["https://fair-rania-espol-dawn-bf49c5ba.koyeb.app","localhost","127.0.0.1","12"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
