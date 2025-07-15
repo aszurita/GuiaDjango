@@ -118,5 +118,10 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.user.user_details",
 )
 
+
+print("GOOGLE_OAUTH2_KEY:", os.environ.get('GOOGLE_OAUTH2_KEY', 'NO CONFIGURADO'))
+print("GOOGLE_OAUTH2_SECRET:", os.environ.get('GOOGLE_OAUTH2_SECRET', 'NO CONFIGURADO'))
+
+
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
