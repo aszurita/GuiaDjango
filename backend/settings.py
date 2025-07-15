@@ -20,7 +20,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get("SECRET_KEY", "clave-insegura")
 DEBUG = os.environ.get("DEBUG", "False") == "True"
-ALLOWED_HOSTS = ["https://fair-rania-espol-dawn-bf49c5ba.koyeb.app","localhost","127.0.0.1","12"]
+
+# CORRECIÓN 1: Remover https:// y agregar dominio sin protocolo
+ALLOWED_HOSTS = [
+    "fair-rania-espol-dawn-bf49c5ba.koyeb.app",  # Sin https://
+    "localhost",
+    "127.0.0.1",
+    "12"
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -72,6 +79,9 @@ AUTHENTICATION_BACKENDS = (
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get('GOOGLE_OAUTH2_KEY')
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get('GOOGLE_OAUTH2_SECRET')
 
+# CORRECIÓN 2: Configurar URLs de redirección para OAuth
+SOCIAL_AUTH_GOOGLE_OAUTH2_REDIRECT_URI = 'https://fair-rania-espol-dawn-bf49c5ba.koyeb.app/auth/complete/google-oauth2/'
+
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "profile"
 LOGOUT_URL = "index"
@@ -85,7 +95,6 @@ DATABASES = {
         "NAME": BASE_DIR / "db.sqlite3",
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -118,10 +127,23 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.user.user_details",
 )
 
+# CORRECIÓN 3: Solo mostrar debug en desarrollo
+if DEBUG:
+    print("GOOGLE_OAUTH2_KEY:", os.environ.get('GOOGLE_OAUTH2_KEY', 'NO CONFIGURADO'))
+    print("GOOGLE_OAUTH2_SECRET:", os.environ.get('GOOGLE_OAUTH2_SECRET', 'NO CONFIGURADO'))
 
-print("GOOGLE_OAUTH2_KEY:", os.environ.get('GOOGLE_OAUTH2_KEY', 'NO CONFIGURADO'))
-print("GOOGLE_OAUTH2_SECRET:", os.environ.get('GOOGLE_OAUTH2_SECRET', 'NO CONFIGURADO'))
-
-
+# CORRECIÓN 4: Configuración de seguridad mejorada para producción
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    
+    # CORRECIÓN 5: Configurar CSRF y hosts de confianza
+    CSRF_TRUSTED_ORIGINS = [
+        'https://fair-rania-espol-dawn-bf49c5ba.koyeb.app'
+    ]
+    
+    # CORRECIÓN 6: Configurar dominio de sesión
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
