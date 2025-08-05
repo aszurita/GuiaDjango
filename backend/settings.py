@@ -25,12 +25,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-#y=m_s1tz^*6x+$iit&*m245h(x4)n%+%uwhydcel2wgm7$=@%"
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-#y=m_s1tz^*6x+$iit&*m245h(x4)n%+%uwhydcel2wgm7$=@%')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True  # cambiar
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
-# ALLOWED_HOSTS = []
+DEBUG = os.getenv('DEBUG', 'False').lower() == 'true'
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -48,6 +47,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -79,14 +79,15 @@ AUTHENTICATION_BACKENDS = (
     "django.contrib.auth.backends.ModelBackend",
 )
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY")
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
+# Social Auth settings
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY") or os.getenv("GOOGLE_OAUTH2_KEY")
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET") or os.getenv("GOOGLE_OAUTH2_SECRET")
 
 # URLs de redirección después del login
 LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = "index"
-LOGOUT_URL = "login"
-LOGOUT_REDIRECT_URL = "login"
+LOGIN_REDIRECT_URL = "profile"
+LOGOUT_URL = "index"
+LOGOUT_REDIRECT_URL = "index"
 
 
 WSGI_APPLICATION = "backend.wsgi.application"
@@ -95,12 +96,27 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+# Configuración automática: SQLite local, PostgreSQL en Railway
+if os.getenv('RAILWAY_ENVIRONMENT'):
+    # En Railway, usar PostgreSQL automáticamente
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('PGDATABASE'),
+            'USER': os.getenv('PGUSER'),
+            'PASSWORD': os.getenv('PGPASSWORD'),
+            'HOST': os.getenv('PGHOST'),
+            'PORT': os.getenv('PGPORT'),
+        }
     }
-}
+else:
+    # Local, usar SQLite (como estaba originalmente)
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation
@@ -137,29 +153,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-AUTHENTICATION_BACKENDS = (
-    "social_core.backends.google.GoogleOAuth2",
-    "django.contrib.auth.backends.ModelBackend",
-)
-
-# Social Auth settings
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.getenv("GOOGLE_OAUTH2_KEY")
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.getenv("GOOGLE_OAUTH2_SECRET")
-
-# URLs de redirección después del login
-LOGIN_URL = "login"
-LOGIN_REDIRECT_URL = "profile"
-LOGOUT_URL = "index"
-LOGOUT_REDIRECT_URL = "index"
 
 ## Agregar para autorizacion
 SOCIAL_AUTH_PIPELINE = (
