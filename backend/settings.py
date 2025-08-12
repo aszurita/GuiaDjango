@@ -29,7 +29,7 @@ SECRET_KEY = "django-insecure-#y=m_s1tz^*6x+$iit&*m245h(x4)n%+%uwhydcel2wgm7$=@%
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True  # cambiar
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = ["*"]
 # ALLOWED_HOSTS = []
 
 
@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django_extensions",  # Para soporte HTTPS en desarrollo
     "main",
     "social_django",  # Add social-auth-app-django,
 ]
